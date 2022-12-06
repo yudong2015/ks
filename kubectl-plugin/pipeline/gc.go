@@ -11,6 +11,7 @@ import (
 	"github.com/kubesphere-sigs/ks/kubectl-plugin/common"
 	"github.com/kubesphere-sigs/ks/kubectl-plugin/pipeline/option"
 	"github.com/kubesphere-sigs/ks/kubectl-plugin/types"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -68,7 +69,7 @@ type gcOption struct {
 func (o *gcOption) preRunE(cmd *cobra.Command, args []string) (err error) {
 	if len(o.namespaces) == 0 {
 		if err = o.getAllDevOpsNamespace(); err != nil {
-			fmt.Printf("failed to get all DevOps project namespace, error: %+v", err)
+			log.Errorf("failed to get all DevOps project namespace, error: %+v", err)
 		}
 	}
 	return
@@ -114,10 +115,10 @@ func (o *gcOption) cleanPipelineRunInNamespace(namespace string) (err error) {
 			delErr := o.client.Resource(types.GetPipelineRunSchema()).Namespace(namespace).Delete(
 				context.TODO(), item.GetName(), metav1.DeleteOptions{})
 			if delErr != nil {
-				fmt.Printf("failed to delete PipelineRun %s/%s, error: %v\n", item.GetName(), namespace, delErr)
+				log.Errorf("failed to delete PipelineRun %s/%s, error: %v", item.GetName(), namespace, delErr)
 			} else {
 				toDelete--
-				fmt.Printf("ok to delete PipelineRun %s/%s\n", item.GetName(), namespace)
+				log.Errorf("ok to delete PipelineRun %s/%s", item.GetName(), namespace)
 			}
 		}
 	}
@@ -205,7 +206,7 @@ func (o *gcOption) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(errorsNs) > 0 {
-		fmt.Printf("gc failed in %d namespaces: %v\n", len(errorsNs), errorsNs)
+		log.Errorf("gc failed in %d namespaces: %v", len(errorsNs), errorsNs)
 		return fmt.Errorf("gc failed")
 	}
 	return nil
@@ -264,9 +265,9 @@ func (p *gcPipeline) ascPipelinerun() {
 }
 
 func (p *gcPipeline) clean() (err error) {
-	fmt.Printf("clean pipelinerun of pipeline: %s ..\n", p.name)
+	log.Infof("clean pipelinerun of pipeline: %s ..", p.name)
 	if p.pType != option.NoScmPipelineType {
-		fmt.Printf("the type of pipeline is %s, ignore.", p.pType)
+		log.Warnf("the type of pipeline is %s, ignore.", p.pType)
 		return
 	}
 
@@ -277,18 +278,18 @@ func (p *gcPipeline) clean() (err error) {
 		}
 	}
 	if len(p.pipelinerunList) == 0 {
-		fmt.Printf("there is no pipelinerun of pipeline: %s \n", p.name)
-		return err
+		log.Infof("there is no pipelinerun of pipeline: %s.", p.name)
+		return nil
 	}
 
 	deletingPipelinerunList := p.needToDelete()
 	for _, runName := range deletingPipelinerunList {
 		if err = p.option.client.Resource(types.GetPipelineRunSchema()).Namespace(p.namespace).Delete(
 			context.TODO(), runName, metav1.DeleteOptions{}); err != nil {
-			fmt.Printf("failed to delete PipelineRun: %s, error: %+v\n", runName, err)
+			log.Errorf("failed to delete PipelineRun: %s, error: %+v", runName, err)
 			return err
 		}
-		fmt.Printf("ok to delete PipelineRun %s\n", runName)
+		log.Infof("ok to delete PipelineRun: %s.", runName)
 	}
 	return
 }
