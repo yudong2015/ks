@@ -40,7 +40,7 @@ builds:
     - -w
 dist: bin
 archives:
-  - name_template: "ks-{{ title .Os }}-{{ .Arch }}"
+  - name_template: "ks-{{ .Os }}-{{ .Arch }}"
     id: "ks"
     builds:
       - ks
@@ -50,7 +50,7 @@ archives:
     files:
       - README.md
       - LICENSE
-  - name_template: "kubectl-ks-{{ title .Os }}-{{ .Arch }}"
+  - name_template: "kubectl-ks-{{ .Os }}-{{ .Arch }}"
     id: "kubectl-ks"
     builds:
       - "kubectl-ks"
@@ -71,7 +71,7 @@ changelog:
 nfpms:
   - file_name_template: >-
       ks-
-      {{- title .Os }}-
+      {{- .Os }}-
       {{- if eq .Arch "amd64" }}64bit
       {{- else if eq .Arch "darwin" }}macOS
       {{- else }}{{ .Arch }}{{ end -}}
