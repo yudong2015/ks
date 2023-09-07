@@ -29,8 +29,7 @@ jobs:
         upx -V
     - name: Image Registry Login
       run: |
-        docker login --username ${{ secrets.DOCKER_HUB_USER }} --password ${{secrets.DOCKER_HUB_TOKEN}}
-        docker login ghcr.io --username yudong2015 --password ${{secrets.GH_PUBLISH_SECRETS}}
+        docker login --username=${{ secrets.DOCKER_HUB_USER }} --password ${{secrets.DOCKER_HUB_PASSWORD}} registry.cn-huhehaote.aliyuncs.com
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@v3
       with:
@@ -42,23 +41,5 @@ jobs:
       run: |
         ver=$(git describe --tags)
         cp bin/ks_linux_amd64_v1/ks build/ks
-        docker build ./build -t kubespheredev/ks-tool:v1.17.0-${ver}
-        docker push kubespheredev/ks-tool:v1.17.0-${ver}
-
-        docker tag kubespheredev/ks-tool:v1.17.0-${ver} kubespheredev/ks-tool:latest
-        docker push kubespheredev/ks-tool:latest
-    - name: Build Registry Images
-      run: |
-        docker build build/registry -t ghcr.io/kubesphere-sigs/registry:local-2 \
-          --label org.opencontainers.image.source=https://github.com/kubesphere-sigs/ks
-        docker build build/registry --build-arg REMOTE_URL=https://registry-1.docker.io -t ghcr.io/kubesphere-sigs/registry:docker-2 \
-          --label org.opencontainers.image.source=https://github.com/kubesphere-sigs/ks
-        docker build build/registry --build-arg REMOTE_URL=https://quay.io -t ghcr.io/kubesphere-sigs/registry:quay-2 \
-          --label org.opencontainers.image.source=https://github.com/kubesphere-sigs/ks
-        docker build build/registry --build-arg REMOTE_URL=https://ghcr.io -t ghcr.io/kubesphere-sigs/registry:ghcr-2 \
-          --label org.opencontainers.image.source=https://github.com/kubesphere-sigs/ks
-
-        docker push ghcr.io/kubesphere-sigs/registry:local-2
-        docker push ghcr.io/kubesphere-sigs/registry:docker-2
-        docker push ghcr.io/kubesphere-sigs/registry:quay-2
-        docker push ghcr.io/kubesphere-sigs/registry:ghcr-2
+        docker build ./build -t registry.cn-huhehaote.aliyuncs.com/ydong/ks:v1.17.0-${ver}
+        docker push registry.cn-huhehaote.aliyuncs.com/ydong/ks:v1.17.0-${ver}
